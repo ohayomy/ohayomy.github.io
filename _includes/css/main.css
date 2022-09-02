@@ -4,6 +4,18 @@
  * For details, see http://www.apache.org/licenses/LICENSE-2.0.
  */
 
+
+ @font-face {
+    font-family: "Montserrat";
+    src: url("//fonts.googleapis.com/css?family=Montserrat:400,700");
+  }
+  
+  @font-face {
+    font-family: "Gowun Dodum";
+    src: url("https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap");
+    unicode-range: U+AC00-D7A3;
+  }
+
 body {
     overflow-x: hidden;
 }
@@ -481,4 +493,9 @@ footer .footer-below {
 .modal.fade.in {
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
+}
+
+
+#about ul li {
+    font-size: 20px;
 }
