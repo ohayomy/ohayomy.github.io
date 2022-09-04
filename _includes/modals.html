@@ -1,6 +1,6 @@
  <!-- Portfolio Modals -->
  {% for post in site.posts %}
-    <div class="portfolio-modal modal fade" id="portfolioModal-{{ post.modal-id }}" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="portfolio-modal modal fade" id="portfolioModal-1" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-content">
             <div class="close-modal" data-dismiss="modal">
                 <div class="lr">
@@ -12,12 +12,431 @@
                 <div class="row">
                     <div class="col-lg-8 col-lg-offset-2">
                         <div class="modal-body">
-                            <h2>{{ post.title }}</h2>
+                            <h2>페이징 코드</h2>
                             <hr class="star-primary">
-                            <img src="img/portfolio/{{ post.img }}" class="img-responsive img-centered" alt="{{ post.alt }}">
-                            {% if post.description %}
-                                <p>{{ post.description }}</p>
-                            {% endif %}
+                            <img src="img/portfolio/페이징.PNG" class="img-responsive img-centered" alt="{{ post.alt }}">
+<p>페이지 구현에 필요한 필드 정의</p>
+<pre>
+@Data
+public class PageInfo {
+
+    private int totalItems; bn       
+
+    private int currentPage;
+    private int limit;
+    private int displayPageNum;
+
+    private int offset;
+    private int totalPages;
+    private int startPage;
+    private int endPage;
+    private boolean hasPrev;
+    private boolean hasNext;
+
+
+    public PageInfo(int currentPage, int limit, int displayPageNum) {
+        this.currentPage = currentPage;
+        this.limit = limit;
+        this.displayPageNum = displayPageNum;
+    }
+
+    public void setTotalItems(int totalItems) {
+        this.totalItems = totalItems;
+        this.offset = (limit * currentPage) - limit;
+        this.totalPages = ((totalItems - 1) / limit) + 1;
+        this.startPage = ((currentPage - 1) / displayPageNum) * displayPageNum + 1;
+        this.endPage = (((currentPage-1)/displayPageNum)+1) * displayPageNum;
+        if(totalPages < endPage) {this.endPage = totalPages;}
+
+        this.hasPrev = (startPage == 1) ? false : true;
+        this.hasNext = (endPage == totalPages) ? false : true;
+    }
+
+    public int getStartPage() {
+        return startPage;
+    }
+    public int getEndPage() {
+        return endPage;
+    }
+    public boolean getHasPrev() {
+        return hasPrev;
+    }
+    public boolean getHasNext() {
+        return hasNext;
+    }
+    public int getTotalPages() { return totalPages; }
+    public int getDisplayPageNum() {
+        return displayPageNum;
+    }
+}
+</pre>
+<p>기본값 지정 및 편의를 위해 resolveArgument를 사용</p>
+<pre>
+public class PageInfoHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
+
+    final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private static final String DEFAULT_PARAMETER_PAGE = "currentPage";
+    private static final String DEFAULT_PARAMETER_LIMIT = "limit";
+    private static final String DEFAULT_PARAMETER_PAGE_NUM = "displayPageNum";
+    private static final int DEFAULT_LIMIT = 25;
+    private static final int DEFAULT_PAGE_NUM = 10;
+
+    @Override
+    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
+        HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
+
+        // 현재 페이지
+        int currentPage = NumberUtils.toInt(request.getParameter(DEFAULT_PARAMETER_PAGE), 1);
+        // 리스트 갯수
+        int limit = NumberUtils.toInt(request.getParameter(DEFAULT_PARAMETER_LIMIT), DEFAULT_LIMIT);
+        // 한 번에 표시할 페이지 개수
+        int displayPageNum = NumberUtils.toInt(request.getParameter(DEFAULT_PARAMETER_PAGE_NUM), DEFAULT_PAGE_NUM);
+
+
+        return new PageInfo(currentPage, limit, displayPageNum);
+    }
+
+    @Override
+    public boolean supportsParameter(MethodParameter methodParameter) {
+        return PageInfo.class.isAssignableFrom(methodParameter.getParameterType());
+    }
+}
+</pre>
+<p>Configuration에 페이지 리졸버 등록</p>
+<pre>
+@Override
+public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+    resolvers.add(new PageInfoHandlerMethodArgumentResolver());
+}
+</pre>
+<p>검색용 parameter를 쓸 것이기 때문에 PageRequestParameter에 parameter와 PageInfo를 묶어줍니다</p>
+<pre>
+@Data
+public class PageRequestParameter<T> {
+
+    private PageInfo pageInfo;
+    private T parameter;
+
+    public PageRequestParameter(PageInfo pageInfo, T parameter) {
+        this.pageInfo = pageInfo;
+        this.parameter = parameter;
+    }
+
+}
+</pre>
+<p>쿼리부분</p>
+<pre>
+LIMIT #{pageInfo.offset}, #{pageInfo.limit}
+</pre>
+                            <ul class="list-inline item-details">
+                                {% if post.client %}
+                                    <li>Client:
+                                        <strong><a href="http://startbootstrap.com">{{ post.client }}</a>
+                                        </strong>
+                                    </li>
+                                {% endif %}
+                                {% if post.project-date %}
+                                    <li>Date:
+                                        <strong><a href="http://startbootstrap.com">{{ post.project-date }}</a>
+                                        </strong>
+                                    </li>
+                                {% endif %}
+                                {% if post.category %}
+                                    <li>Service:
+                                        <strong><a href="http://startbootstrap.com">{{ post.category }}</a>
+                                        </strong>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                            <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="portfolio-modal modal fade" id="portfolioModal-2" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-content">
+            <div class="close-modal" data-dismiss="modal">
+                <div class="lr">
+                    <div class="rl">
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 col-lg-offset-2">
+                        <div class="modal-body">
+                            <h2>게시판 순서 정렬 코드</h2>
+                            <hr class="star-primary">
+                            <img src="img/portfolio/게시판.PNG" class="img-responsive img-centered" alt="{{ post.alt }}">
+<p>완료 버튼을 누르면 hidden타입의 순서 order값을 리스트로 넘겨줍니다.</p>
+<pre>
+&lt;form method="post" action="/admin/board-order"&gt;
+    &lt;div class="drag-drop"&gt;
+        &lt;ul id="sortable"&gt;
+            &lt;c:forEach items="${boardList}" var="board" varStatus="vs"&gt;
+                &lt;li class="item"&gt;
+                &lt;span class="ui-icon ui-icon-arrowthick-2-n-s"&gt;&lt;/span&gt;
+                    ${board.boardName}
+                &lt;input type="hidden" name="rawOrder" value="${vs.count}"&gt;
+                &lt;/li&gt;
+            &lt;/c:forEach&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;button type="submit" id="sort" class="btn btn-primary"&gt;완료&lt;/button&gt;
+&lt;/form&gt;
+</pre>
+<p>컨트롤러</p>
+<pre>
+@PostMapping("/admin/board-order")
+public String setBoardOrder(@RequestParam List<String> rawOrder) {
+
+    logger.info("rawOrderArray={}", rawOrder);
+
+    List<Board> newOrderList = new ArrayList<>();
+
+    for (int i=0; i < rawOrder.size(); i++) {
+        Board newOrder = boardService.get(Integer.parseInt(rawOrder.get(i)));
+        newOrder.setBoardOrder(i+1);
+        newOrderList.add(newOrder);
+    }
+
+    for(int i=0; i < rawOrder.size(); i++) {
+        boardService.update(newOrderList.get(i));
+    }
+
+
+    return "redirect:/admin/board";
+}
+</pre>
+                            <ul class="list-inline item-details">
+                                {% if post.client %}
+                                    <li>Client:
+                                        <strong><a href="http://startbootstrap.com">{{ post.client }}</a>
+                                        </strong>
+                                    </li>
+                                {% endif %}
+                                {% if post.project-date %}
+                                    <li>Date:
+                                        <strong><a href="http://startbootstrap.com">{{ post.project-date }}</a>
+                                        </strong>
+                                    </li>
+                                {% endif %}
+                                {% if post.category %}
+                                    <li>Service:
+                                        <strong><a href="http://startbootstrap.com">{{ post.category }}</a>
+                                        </strong>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                            <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="portfolio-modal modal fade" id="portfolioModal-3" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-content">
+            <div class="close-modal" data-dismiss="modal">
+                <div class="lr">
+                    <div class="rl">
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 col-lg-offset-2">
+                        <div class="modal-body">
+                            <h2>이미지 업로드</h2>
+                            <hr class="star-primary">
+                            <img src="img/portfolio/파일.PNG" class="img-responsive img-centered" alt="{{ post.alt }}">
+<p>jsp부분</p>
+<pre>
+&lt;form id="form" action="/admin/contents" method="post" enctype="multipart/form-data"&gt;
+    &lt;div class="title"&gt;
+        &lt;select name="boardNo" class="form-select" aria-label="Default select example" value=""&gt;
+            &lt;c:forEach var="board" items="${boardList}" varStatus="status"&gt;
+                &lt;option value="${board.boardNo}"&gt;${board.boardName}&lt;/option&gt;
+            &lt;/c:forEach&gt;
+        &lt;/select&gt;
+        &lt;input type="text" name="contentsName" id="contentsName" class="form-control title" placeholder="컨텐츠 이름"
+            aria-label="Recipient's username" aria-describedby="basic-addon2"&gt;
+    &lt;/div&gt;
+    &lt;span class="thumnail-image-upload"&gt;썸네일 이미지 등록&lt;/span&gt;
+    &lt;input type="file" name="thumbnail" id="thumbnail-image"&gt;
+    &lt;div class="date"&gt;
+        &lt;span&gt;출시일자(yyyy-mm-dd) : &lt;/span&gt;
+        &lt;input type="text" name="releasedDate" id="releasedDate"&gt;
+    &lt;/div&gt;
+    &lt;div class="mb-3"&gt;
+        &lt;textarea name="info" class="form-control detail" id="exampleFormControlTextarea1" rows="3"&gt;&lt;/textarea&gt;
+    &lt;/div&gt;
+    &lt;button type="submit" class="btn btn-primary"&gt;등록&lt;/button&gt;
+&lt;/form&gt;
+</pre>
+<p>확장자를 따로 빼내고, 랜덤한 이름을 붙임. 지정한 경로에 폴더 없으면 생성.</p>
+<pre>
+@PostMapping("/admin/contents")
+public String save(ContentsParameter parameter, Model model, @RequestParam("thumbnail") MultipartFile multipartFile, @RequestParam int boardNo) {
+
+    // 제목 필수 체크
+    if (StringUtils.isEmpty(parameter.getContentsName())) {
+        throw new BaseException(BaseResponseCode.VALIDATE_REQUIRED, new String[]{"title", "제목"});
+    }
+    // 내용 필수 체크
+    if (StringUtils.isEmpty(parameter.getInfo())) {
+        throw new BaseException(BaseResponseCode.VALIDATE_REQUIRED, new String[]{"contents", "내용"});
+    }
+
+    if (!ObjectUtils.isEmpty(multipartFile)) {
+
+        //이미지 저장
+        String prefix = multipartFile.getOriginalFilename()
+                .substring(multipartFile.getOriginalFilename().lastIndexOf(".") + 1, multipartFile.getOriginalFilename().length());
+        String filename = UUID.randomUUID() + "." + prefix;
+
+        String uploadFilePath = config.getUploadFilePath();
+
+
+        File folder = new File(uploadFilePath);
+        if (!folder.isDirectory()) {
+            folder.mkdirs();
+        }
+
+        String pathname = uploadFilePath + filename;
+        String resourcePathname = config.getUploadResourcePath() + filename;
+
+        File dest = new File(pathname);
+        try {
+            multipartFile.transferTo(dest);
+            parameter.setThumbnailURL(resourcePathname);
+        } catch (IllegalStateException | IOException e) {
+            logger.error("e", e);
+        }
+
+    }
+
+    parameter.setBoardNo(boardNo);
+    contentsService.save(parameter);
+    return "redirect:/admin/contents";
+}
+</pre>
+<p>지정 경로(properties파일)</p>
+<pre>
+uploadFile.path = C:/app/upload/
+uploadFile.resourcePath = /upload/
+</pre>
+                            <ul class="list-inline item-details">
+                                {% if post.client %}
+                                    <li>Client:
+                                        <strong><a href="http://startbootstrap.com">{{ post.client }}</a>
+                                        </strong>
+                                    </li>
+                                {% endif %}
+                                {% if post.project-date %}
+                                    <li>Date:
+                                        <strong><a href="http://startbootstrap.com">{{ post.project-date }}</a>
+                                        </strong>
+                                    </li>
+                                {% endif %}
+                                {% if post.category %}
+                                    <li>Service:
+                                        <strong><a href="http://startbootstrap.com">{{ post.category }}</a>
+                                        </strong>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                            <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="portfolio-modal modal fade" id="portfolioModal-4" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-content">
+            <div class="close-modal" data-dismiss="modal">
+                <div class="lr">
+                    <div class="rl">
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 col-lg-offset-2">
+                        <div class="modal-body">
+                            <h2>댓글/대댓글</h2>
+                            <hr class="star-primary">
+                            <img src="img/portfolio/댓글.PNG" class="img-responsive img-centered" alt="{{ post.alt }}">
+<p>최상위 일반댓글을 달 때</p>
+<pre>
+@PostMapping("/{articleNo}/add-comment")
+public String addComment(@PathVariable int articleNo, @RequestParam String commentDetail) {
+    CommentParameter commentParameter = new CommentParameter();
+    commentParameter.setArticleNo(articleNo);
+    commentParameter.setDetail(commentDetail);
+    commentParameter.setDepth(0);
+    commentParameter.setParentNo(0);
+
+    int commentGroupNum = 0;
+    if (commentService.getLastGroupNum() == null) {
+        commentGroupNum = 1;
+    } else {
+        commentGroupNum = commentService.getLastGroupNum() + 1;
+    }// 마지막으로 입력된 group값 불러와서 +1
+    commentParameter.setCommentGroup(commentGroupNum);
+    log.info("댓글 저장전 정보 : {}", commentParameter);
+    commentService.save(commentParameter);
+    return "redirect:/article/" + articleNo;
+}
+</pre>
+<p>대댓글 구현</p>
+<p>1.while문을 이용해 현재 댓글을 달려는 부모댓글의 마지막 자손댓글을 찾아 순서값을 구한다</p>
+<p>2.그 순서값에 +1을 해서 변수로 저장해둔다</p>
+<p>3.1에서 찾은 마지막 자손댓글 뒤에오는 댓글들의 order값을 전부+1 한다</p>
+<p>4.2에서 변수로 저장해둔걸 현재 달려는 대댓글의 order값으로 set해서 최종적으로 DB에 저장한다</p>
+<pre>
+@PostMapping("/{articleNo}/add-nested-comment")
+public String addNestedComment(@PathVariable int articleNo,
+                                @RequestParam int commentGroup, @RequestParam int commentNo, @RequestParam int parentNo,
+                                @RequestParam int depth, @RequestParam int nestedCommentOrder,
+                                @RequestParam String nestedCommentDetail
+) {
+    CommentParameter inputComment = new CommentParameter();
+    inputComment.setArticleNo(articleNo);
+    inputComment.setDetail(nestedCommentDetail);
+    inputComment.setCommentGroup(commentGroup);
+    inputComment.setParentNo(commentNo);
+    inputComment.setDepth(depth + 1);
+
+    CommentParameter clickedComment = commentService.get(commentNo);
+    int commentOrder = 0;
+    log.info("클릭한 댓글 : {}", clickedComment);
+
+    CommentParameter searchLastCmt = clickedComment;
+    CommentParameter lastChild = searchLastCmt;
+    while (true) {
+        searchLastCmt.setParentNo(searchLastCmt.getCommentNo());
+        lastChild = commentService.getLastNestedComment(searchLastCmt);
+        if (lastChild == null) {
+            break;
+        }
+        searchLastCmt = lastChild;
+        log.info("현재 searchLastParam : {}", searchLastCmt);
+    }
+
+    commentOrder = searchLastCmt.getNestedCommentOrder() + 1;
+    searchLastCmt.setNestedCommentOrder(commentOrder);
+    commentService.updateCommentOrder(searchLastCmt);
+    inputComment.setNestedCommentOrder(commentOrder);
+    log.info("입력댓글의 order : {}", inputComment.getNestedCommentOrder());
+    commentService.save(inputComment);
+    return "redirect:/article/" + articleNo;
+}
+</pre>
                             <ul class="list-inline item-details">
                                 {% if post.client %}
                                     <li>Client:
